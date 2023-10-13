@@ -1,0 +1,114 @@
+1. Проверка что у клиента подключена услуга подписка. 
+GET https://mobile-int.moscow.alfaintra.net/gateway/external/customer-info-api/information
+Если по ключу servicePackage == "T00" или "T05", то у пользователя подключена подписка беслплатные переводы 
+
+
+
+2. Если у клиента есть ПУ по которому бот предоставляет ответ
+GET https://mobile-int.moscow.alfaintra.net/gateway/external/customer-info-api/information
+Предоставляем ответы, если servicePackage ==
+    OnLajf: "107"
+    Klass: "102"
+    Ekonom: "301"
+    EkonomUltra: "302"
+    Optimum: "O01"
+    OptimumExclam: "O61"
+    OptimumUltra: "O62"
+    Komfort: "K01"
+    KomfortUltra: "LZ1"
+    KomfortUltraFree: "LZ2"
+    KomfortExclam: "L01"
+    KomfortFree: "L31"
+    MaksimumPlus: "N01"
+    MaksimumUltra: "NZ1"
+    MaksimumFree: "N31"
+    MaksimumUltraFree: "NZ2"
+    Premium: "T05"
+    Corporate: "105"
+
+
+
+3. Предоставляем ответ о стоимости Альфа - чека. Используем 2 сервиса 
+
+
+Логика по которой определяем ответ. 
+  1. Получили массив карт клиент от cards-api
+  2. Получили детальную информацию Альфа чек от alfacheck-settings-api/cards
+
+В цикле перебираем ответ cards-api и каждую карту обогащаем инфой от alfacheck-settings-api/cards. 
+Если найдена карта по которой подключена услуга, но нет информации о стоимости отalfacheck-settings-api/cards , то смотрим на тип карты, в зависимости типа возвращаем ответ, иначе берём стоимость в alfacheck-settings-api/cards
+
+
+Получаем карты клиента тут 
+GET https://mobile-int.moscow.alfaintra.net/gateway/external/cards-api/
+Получаем детали по Альфа - чеку тут 
+GET https://mobile-int.moscow.alfaintra.net/gateway/external/alfacheck-settings-api/cards
+
+
+
+Пример ответ от (https://mobile-int.moscow.alfaintra.net/gateway/external/alfacheck-settings-api/cards)
+когда одна карта и по ней не подключена услугу Алфьа - чек "AS24CH"
+
+{
+    "cards": [
+        {
+            "id": "114736848",
+            "name": "Альфа-Карта",
+            "maskedNumber": "··7701",
+            "ips": "MC",
+            "type": "SU",
+            "alfaCheck": {
+                "enabled": false,
+                "description": null,
+                "phone": null,
+                "dialogDescription": null,
+                "inProgress": false
+            }
+        }
+    ]
+}
+
+Пример ответ от (https://mobile-int.moscow.alfaintra.net/gateway/external/alfacheck-settings-api/cards)
+когда у клиента подключена услуга Альфа - чек и известна стоиомсть   "BBCPVG"
+
+{
+    "cards": [
+        {
+            "id": "153526646",
+            "name": "ER-MC World CashBack (1%/5%/10%)PP",
+            "maskedNumber": "··1091",
+            "ips": "MC",
+            "type": "ER",
+            "alfaCheck": {
+                "enabled": true,
+                "description": "SMS — 99 ₽ в месяц",
+                "phone": "79053800293",
+                "dialogDescription": null,
+                "inProgress": false
+            }
+        }
+    ]
+}
+
+
+
+Пример ответ от (https://mobile-int.moscow.alfaintra.net/gateway/external/alfacheck-settings-api/cards)
+когда у клиента подключена услуга Альфа - чек и известна стоиомсть 
+{
+    "cards": [
+        {
+            "id": "153526641",
+            "name": "ER-MC World CashBack (1%/5%/10%)PP",
+            "maskedNumber": "··1092",
+            "ips": "MC",
+            "type": "ER",
+            "alfaCheck": {
+                "enabled": true,
+                "description": null,
+                "phone": "79053800293",
+                "dialogDescription": null,
+                "inProgress": null
+            }
+        }
+    ]
+}
